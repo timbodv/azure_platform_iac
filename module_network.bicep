@@ -3,8 +3,6 @@ param addressPrefixes string
 param subnetCollection array
 param shortCode string
 param prefix string
-//param peerToHub bool
-//param hubVirtualNetworkId string = ''
 param peeringCollection array
 
 var vnetName = '${prefix}-${shortCode}-vnet'

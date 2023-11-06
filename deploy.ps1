@@ -13,6 +13,5 @@ Shared Services 8e9d95eb-7ef8-4c08-a817-b44fa8655224
 #>
 
 
-#Set-AzContext -SubscriptionName "Shared Services"; New-AzSubscriptionDeployment -Location australiaeast -TemplateFile .\plz.bicep
 New-AzSubscriptionDeployment -Location australiaeast -TemplateFile .\plz.bicep
 New-AzSubscriptionDeployment -Location australiaeast -TemplateFile .\alz.bicep
