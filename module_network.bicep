@@ -3,9 +3,14 @@ param addressPrefixes string
 param subnetCollection array
 param shortCode string
 param prefix string
+//param peerToHub bool
+//param hubVirtualNetworkId string = ''
+param peeringCollection array
 
-resource plz_virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
-  name: '${prefix}-${shortCode}-vnet'
+var vnetName = '${prefix}-${shortCode}-vnet'
+
+resource virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
+  name: vnetName
   location: location
   properties: {
     addressSpace: {
@@ -36,3 +41,13 @@ resource plz_virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   }
 }
 
+resource peer_virtual_network 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-08-01' = [for (peer, index) in peeringCollection: {
+  name: '${vnetName}-to-${peer.name}'
+  parent: virtual_network
+  properties: {
+    allowForwardedTraffic: true
+    remoteVirtualNetwork: {
+      id: peer.id
+    }
+  }
+}]
