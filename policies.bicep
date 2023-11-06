@@ -13,45 +13,6 @@ var defender_logging_initiative_assignment_name = 'dfc_log_init_asgmt'
 var defender_initiative_assignment_name = 'dfc_init_asgmt'
 var defender_initiative_name = 'defender_initiative'
 
-resource parked_management_group 'Microsoft.Management/managementGroups@2021-04-01' = {
-  name: 'parked-mgmt'
-  scope: tenant()
-  properties: {
-    details: {
-      parent: {
-        id: tenantResourceId('Microsoft.Management/managementGroups', managementGroup().name)
-      }
-    }
-    displayName: 'Parked'
-  }
-}
-
-resource infrastructure_management_group 'Microsoft.Management/managementGroups@2021-04-01' = {
-  name: 'infrastructure-mgmt'
-  scope: tenant()
-  properties: {
-    details: {
-      parent: {
-        id: tenantResourceId('Microsoft.Management/managementGroups', managementGroup().name)
-      }
-    }
-    displayName: 'Infrastructure'
-  }
-}
-
-resource workloads_management_group 'Microsoft.Management/managementGroups@2021-04-01' = {
-  name: 'workloads-mgmt'
-  scope: tenant()
-  properties: {
-    details: {
-      parent: {
-        id: tenantResourceId('Microsoft.Management/managementGroups', managementGroup().name)
-      }
-    }
-    displayName: 'Workloads'
-  }
-}
-
 resource assign_defender_initiative_assignment_owner_role 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(managementGroup().id, defender_initiative_assignment_name, owner_role_definition_id)
   scope: managementGroup()
