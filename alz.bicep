@@ -9,6 +9,7 @@ var alzCollection = [
     subscriptionId: '967d672b-7700-45c3-81cc-bfca8da60a25'
     addressPrefixes: '10.1.8.0/22'
     subnetCollection: []
+    //natGatewayId: null
   }
   {
     name: 'Shared Services'
@@ -17,8 +18,9 @@ var alzCollection = [
     addressPrefixes: '10.1.4.0/22'
     subnetCollection: [
       {
-        name: 'workload-one'
+        name: 'identity'
         subnetCidr: '10.1.4.0/24'
+        nat_gateway_id: null
       }
     ]
   }
@@ -34,3 +36,4 @@ module alz_deployment_module 'module_alz_deployment.bicep' = [for (alz, index) i
     shortCode: alz.shortCode
   }
 }]
+
