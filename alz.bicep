@@ -21,6 +21,7 @@ var alzCollection = [
         name: 'identity'
         subnetCidr: '10.1.4.0/24'
         nat_gateway_id: null
+        security_rules : null
       }
     ]
   }

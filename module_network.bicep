@@ -53,7 +53,7 @@ resource network_security_groups 'Microsoft.Network/networkSecurityGroups@2021-0
   name: '${prefix}-${shortCode}-${subnet.name}-nsg'
   location: location
   properties: {
-    securityRules: []
+    securityRules: subnet.security_rules
   }
 }]
 

@@ -12,8 +12,62 @@ var plzNetwork = {
       name: 'edge'
       subnetCidr: '10.1.0.0/24'
       nat_gateway_id: { id: nat_module.outputs.nat_gateway_resource_id }
-    }
-  ]
+      security_rules: [
+        {
+          name: 'Wireguard'
+          properties: {
+            access: 'Allow'
+            //description: 'string'
+            destinationAddressPrefix: '10.1.0.4'
+            // destinationAddressPrefixes: [
+            //   'string'
+            // ]
+            destinationPortRange: '51820'
+            // destinationPortRanges: [
+            //   'string'
+            // ]
+            direction: 'Inbound'
+            priority: 110
+            protocol: 'Udp'
+            sourceAddressPrefix: 'Internet'
+            // sourceAddressPrefixes: [
+            //   'string'
+            // ]
+            sourcePortRange: '*'
+            // sourcePortRanges: [
+            //   'string'
+            // ]
+          }
+        } 
+        {
+          name: 'SSH'
+          properties: {
+            access: 'Allow'
+            //description: 'string'
+            destinationAddressPrefix: '10.1.0.4'
+            // destinationAddressPrefixes: [
+            //   'string'
+            // ]
+            destinationPortRange: '22'
+            // destinationPortRanges: [
+            //   'string'
+            // ]
+            direction: 'Inbound'
+            priority: 120
+            protocol: 'Tcp'
+            //sourceAddressPrefix: 'Internet'
+            sourceAddressPrefix: 'VirtualNetwork'
+            // sourceAddressPrefixes: [
+            //   'string'
+            // ]
+            sourcePortRange: '*'
+            // sourcePortRanges: [
+            //   'string'
+            // ]
+          }
+        } 
+      ]
+    } ]
 }
 
 var peeringCollection = [
