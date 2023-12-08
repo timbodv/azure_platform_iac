@@ -9,16 +9,38 @@ var configure_defender_for_servers_with_subplan = json(loadTextContent('./policy
 var owner_role_definition_id = '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
 
 var ms_cloud_security_benchmark_initiative_assignment_name = 'mscsb_init_asgmt'
+var ms_cloud_security_benchmark_initiative_assignment_display_name = 'Microsoft cloud security benchmark'
+
 var defender_logging_initiative_assignment_name = 'dfc_log_init_asgmt'
+var defender_logging_initiative_assignment_display_name = 'Defender for Cloud AMA pipeline'
+
+var defender_initiative_assignment_display_name = 'Defender for Cloud features'
 var defender_initiative_assignment_name = 'dfc_init_asgmt'
 var defender_initiative_name = 'defender_initiative'
+var defender_initiative_display_name = 'Defender for Cloud features'
+
+var plz_initiative_name = 'plz_initiative'
+var plz_initiative_display_name = 'Platform landing zones framework'
+var plz_initiative_assignment_name = 'plz_init_asgmt'
+var plz_initiative_assignment_display_name = 'Platform landing zones framework'
 
 resource assign_defender_initiative_assignment_owner_role 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(managementGroup().id, defender_initiative_assignment_name, owner_role_definition_id)
   scope: managementGroup()
   properties: {
-    description: 'Defender for Cloud policy assignment remediation account'
+    description: '${defender_initiative_assignment_display_name} remediation account'
     principalId: defender_initiative_assignment.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions', owner_role_definition_id)
+  }
+}
+
+resource assign_plz_initiative_assignment_owner_role 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managementGroup().id, plz_initiative_assignment_name, owner_role_definition_id)
+  scope: managementGroup()
+  properties: {
+    description: '${plz_initiative_assignment_display_name} remediation account'
+    principalId: plz_initiative_assignment.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions', owner_role_definition_id)
   }
@@ -28,7 +50,7 @@ resource assign_defender_logging_initiative_assignment_owner_role 'Microsoft.Aut
   name: guid(managementGroup().id, defender_logging_initiative_assignment_name, owner_role_definition_id)
   scope: managementGroup()
   properties: {
-    description: 'Defender for Cloud AMA pipeline policy assignment remediation account'
+    description: '${defender_logging_initiative_assignment_display_name} remediation account'
     principalId: defender_logging_initiative_assignment.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: tenantResourceId('Microsoft.Authorization/roleDefinitions', owner_role_definition_id)
@@ -44,7 +66,7 @@ resource defender_initiative 'Microsoft.Authorization/policySetDefinitions@2020-
   name: defender_initiative_name
   properties: {
     policyType: 'Custom'
-    displayName: 'Defender for Cloud features'
+    displayName: defender_initiative_display_name
 
     policyDefinitions: [
       {
@@ -164,6 +186,89 @@ resource defender_initiative 'Microsoft.Authorization/policySetDefinitions@2020-
   }
 }
 
+resource plz_initiative 'Microsoft.Authorization/policySetDefinitions@2020-09-01' = {
+  name: plz_initiative_name
+  properties: {
+    policyType: 'Custom'
+    displayName: plz_initiative_display_name
+
+    policyDefinitions: [
+      {
+        // Add system-assigned managed identity to enable Guest Configuration assignments on virtual machines with no identities
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '3cf2ab00-13f1-4d0c-8971-2ac904541a7e')
+        policyDefinitionReferenceId: 'add_system_managed_identity'
+        parameters: {}
+      }
+      {
+        // Configure secure communication protocols(TLS 1.1 or TLS 1.2) on Windows machines
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '828ba269-bf7f-4082-83dd-633417bc391d')
+        policyDefinitionReferenceId: 'configure_tls_windows'
+        parameters: {}
+      }
+      {
+        // Deploy the Linux Guest Configuration extension to enable Guest Configuration assignments on Linux VMs
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '331e8ea8-378a-410f-a2e5-ae22f38bb0da')
+        policyDefinitionReferenceId: 'deploy_guest_configuration_linux'
+        parameters: {}
+      }
+      {
+        // Deploy the Windows Guest Configuration extension to enable Guest Configuration assignments on Windows VMs
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '385f5831-96d4-41db-9a3c-cd3af78aaae6')
+        policyDefinitionReferenceId: 'deploy_guest_configuration_windows'
+        parameters: {}
+      }
+      {
+        // Configure supported virtual machines to automatically enable vTPM
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', 'e494853f-93c3-4e44-9210-d12f61a64b34')
+        policyDefinitionReferenceId: 'configure_vtpm'
+        parameters: {}
+      }
+      {
+        // Configure supported Linux virtual machines to automatically install the Guest Attestation extension
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '6074e9a3-c711-4856-976d-24d51f9e065b')
+        policyDefinitionReferenceId: 'deploy_guest_attestation_linux'
+        parameters: {}
+      }
+      {
+        // Configure supported Windows virtual machines to automatically install the Guest Attestation extension
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '98ea2fc7-6fc6-4fd1-9d8d-6331154da071')
+        policyDefinitionReferenceId: 'deploy_guest_attestation_windows'
+        parameters: {}
+      }
+      {
+        // Configure periodic checking for missing system updates on azure Arc-enabled servers
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', 'bfea026e-043f-4ff4-9d1b-bf301ca7ff46')
+        policyDefinitionReferenceId: 'configure_update_check_arc'
+        parameters: {}
+      }
+      {
+        // Configure periodic checking for missing system updates on azure virtual machines
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '59efceea-0c96-497e-a4a1-4eb2290dac15')
+        policyDefinitionReferenceId: 'configure_update_check_az'
+        parameters: {}
+      }
+
+      // to think about
+      //ba0df93e-e4ac-479a-aac2-134bbae39a1a
+      //Schedule recurring updates using Azure Update Manager
+
+    ]
+  }
+}
+
+resource plz_initiative_assignment 'Microsoft.Authorization/policyAssignments@2020-09-01' = {
+  name: plz_initiative_assignment_name
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    displayName: plz_initiative_assignment_display_name
+    enforcementMode: 'Default'
+    policyDefinitionId: plz_initiative.id
+  }
+}
+
 resource defender_initiative_assignment 'Microsoft.Authorization/policyAssignments@2020-09-01' = {
   name: defender_initiative_assignment_name
   location: location
@@ -171,22 +276,9 @@ resource defender_initiative_assignment 'Microsoft.Authorization/policyAssignmen
     type: 'SystemAssigned'
   }
   properties: {
-    displayName: 'Defender for Cloud features'
+    displayName: defender_initiative_assignment_display_name
     enforcementMode: 'Default'
     policyDefinitionId: defender_initiative.id
-  }
-}
-
-resource cloud_security_benchmark_initiative_assignment 'Microsoft.Authorization/policyAssignments@2020-09-01' = {
-  name: ms_cloud_security_benchmark_initiative_assignment_name
-  location: location
-  // identity: {
-  //   type: 'SystemAssigned'
-  // }
-  properties: {
-    displayName: 'Microsoft cloud security benchmark'
-    enforcementMode: 'Default'
-    policyDefinitionId: tenantResourceId('Microsoft.Authorization/policySetDefinitions', '1f3afdf9-d0c9-4c3d-847f-89da613e70a8')
   }
 }
 
@@ -198,7 +290,7 @@ resource defender_logging_initiative_assignment 'Microsoft.Authorization/policyA
     type: 'SystemAssigned'
   }
   properties: {
-    displayName: 'Defender for Cloud AMA pipeline'
+    displayName: defender_logging_initiative_assignment_display_name
     enforcementMode: 'Default'
     policyDefinitionId: tenantResourceId('Microsoft.Authorization/policySetDefinitions', '500ab3a2-f1bd-4a5a-8e47-3e09d9a294c3')
     parameters: {
@@ -214,5 +306,49 @@ resource defender_logging_initiative_assignment 'Microsoft.Authorization/policyA
       // userAssignedManagedIdentityName
       // userAssignedManagedIdentityResourceGroup
     }
+  }
+}
+
+
+resource cloud_security_benchmark_initiative_assignment 'Microsoft.Authorization/policyAssignments@2020-09-01' = {
+  name: ms_cloud_security_benchmark_initiative_assignment_name
+  location: location
+  properties: {
+    displayName: ms_cloud_security_benchmark_initiative_assignment_display_name
+    enforcementMode: 'Default'
+    policyDefinitionId: tenantResourceId('Microsoft.Authorization/policySetDefinitions', '1f3afdf9-d0c9-4c3d-847f-89da613e70a8')
+  }
+}
+
+// resource virtual_machine 'Microsoft.Compute/virtualMachines@2022-11-01' existing = {
+//   name: 'edge-02-vm'
+//   scope: resourceGroup('8e9d95eb-7ef8-4c08-a817-b44fa8655224', 'plz-edge')
+// }
+
+// resource cloud_security_benchmark_initiative_assignment_exemption 'Microsoft.Authorization/policyExemptions@2022-07-01-preview' = {
+//   name: 'ExemptNetworkApplianceFromIpForwardingCheck'
+//   //scope: resourceId('' '/subscriptions/8e9d95eb-7ef8-4c08-a817-b44fa8655224/resourceGroups/plz-edge/providers/Microsoft.Network/networkInterfaces/edge-02-vm-nic-01')
+//   scope: virtual_machine
+//   // /resourceGroups/plz-edge/providers/Microsoft.Network/networkInterfaces/edge-02-vm-nic-01'')
+  
+//   properties: {
+//     //assignmentScopeValidation: 'string'
+//     description: 'Enabled to support connectivity to private cloud'
+//     displayName: 'Exemption for IP forwarding on edge-02'
+//     exemptionCategory: 'Mitigated'
+//     //expiresOn: 'string'
+//     //metadata: any()
+//     policyAssignmentId: cloud_security_benchmark_initiative_assignment.id
+//     policyDefinitionReferenceIds: [
+//       'disableIPForwardingMonitoring'
+//     ]
+//   }
+// }
+
+module plz_custom_roles_module 'module_plz_policies_exemptions.bicep' = {
+  name: 'test_exemption'
+  scope: resourceGroup('8e9d95eb-7ef8-4c08-a817-b44fa8655224', 'plz-edge')
+  params: {
+    assignment_id:cloud_security_benchmark_initiative_assignment.id
   }
 }

@@ -18,6 +18,12 @@ resource network_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' 
   properties: {}
 }
 
+resource recovery_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'alz-recovery'
+  location: location
+  properties: {}
+}
+
 module network_module 'module_network.bicep' = {
   name: 'alz_network_deployment'
   scope: resourceGroup(network_resource_group.name)
@@ -36,6 +42,21 @@ module network_module 'module_network.bicep' = {
 module route_module 'module_spoke_route.bicep' = {
   name: 'alz_route_deployment'
   scope: resourceGroup(network_resource_group.name)
+  params: {
+    location: location
+  }
+}
+
+module policy_module 'module_alz_policies.bicep' = {
+  name: 'alz_policies_deployment'
+  params: {
+    location: location
+  }
+}
+
+module recovery_module 'module_recovery.bicep' = {
+  name: 'alz_recovery_deployment'
+  scope: resourceGroup(recovery_resource_group.name)
   params: {
     location: location
   }
