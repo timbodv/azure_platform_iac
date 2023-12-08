@@ -15,11 +15,13 @@ module plz_policies_module 'module_plz_policies.bicep' = {
   name: 'plz-policies'
   params: {
     location: location
+    default_maintenance_configuration_id: plz_deployment_module.outputs.default_maintenance_configuration_id
   }
 }
 
 module plz_custom_roles_module 'module_plz_custom_roles.bicep' = {
   name: 'plz-custom-roles'
   params: {
+    
   }
 }

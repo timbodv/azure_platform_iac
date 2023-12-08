@@ -38,7 +38,7 @@ var plzNetwork = {
             //   'string'
             // ]
           }
-        } 
+        }
         {
           name: 'SSH'
           properties: {
@@ -65,7 +65,7 @@ var plzNetwork = {
             //   'string'
             // ]
           }
-        } 
+        }
       ]
     } ]
 }
@@ -93,8 +93,8 @@ resource edge_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   properties: {}
 }
 
-resource config_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: 'plz-config'
+resource shared_resources_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'plz-shared-resources'
   location: location
   properties: {}
 }
@@ -145,3 +145,13 @@ module edge_virtual_machine 'module_linux_vm.bicep' = {
     enable_ip_forwarding: true
   }
 }
+
+module shared_resources_module 'module_plz_shared_resources.bicep' = {
+  name: 'plz_shared_resources'
+  scope: resourceGroup(shared_resources_resource_group.name)
+  params: {
+    location: location
+  }
+}
+
+output default_maintenance_configuration_id string = shared_resources_module.outputs.default_maintenance_configuration_id

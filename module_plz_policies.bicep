@@ -1,5 +1,6 @@
 targetScope = 'managementGroup'
 param location string = 'australiaeast'
+param default_maintenance_configuration_id string
 
 // VARIABLES
 var configure_defender_for_servers_with_subplan = json(loadTextContent('./policy_definitions/92cd0485-f6de-4a85-b699-1d44c92fa18e.json'))
@@ -247,11 +248,17 @@ resource plz_initiative 'Microsoft.Authorization/policySetDefinitions@2020-09-01
         policyDefinitionReferenceId: 'configure_update_check_az'
         parameters: {}
       }
+      {
+        // Schedule recurring updates using Azure Update Manager
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', 'ba0df93e-e4ac-479a-aac2-134bbae39a1a')
+        policyDefinitionReferenceId: 'schedule_update_installation'
+        parameters: {
+          maintenanceConfigurationResourceId: {
+            value: default_maintenance_configuration_id
+          }
+        }
 
-      // to think about
-      //ba0df93e-e4ac-479a-aac2-134bbae39a1a
-      //Schedule recurring updates using Azure Update Manager
-
+      }
     ]
   }
 }
