@@ -1,6 +1,8 @@
 targetScope = 'subscription'
 param location string = 'australiaeast'
 
+param daily_backup_policy_id string
+
 var owner_role_definition_id = '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
 
 var policy_assignment_display_name = 'Application landing zone framework (${subscription().subscriptionId})'
@@ -41,10 +43,25 @@ resource alz_initiative 'Microsoft.Authorization/policySetDefinitions@2020-09-01
 
     policyDefinitions: [
       {
-        // Configure Azure Defender for servers to be enabled with plan 1
-        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '85b005b2-95fc-4953-b9cb-f9ee6427c754')
-        policyDefinitionReferenceId: 'test_definition'
-        parameters: {}
+        // Configure backup on virtual machines without a given tag to an existing recovery services vault in the same location
+        policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '09ce66bc-1220-4153-8104-e3f51c936913')
+        policyDefinitionReferenceId: 'configure_backup_when_not_tagged'
+        parameters: {
+          backupPolicyId: {
+            value: daily_backup_policy_id
+          }
+          vaultLocation: {
+            value: location
+          }
+          exclusionTagName: {
+            value: 'default_backup_policy_exclude'
+          }
+          exclusionTagValue: {
+            value: [
+              'true'
+            ]
+          }
+        }
       }
     ]
   }

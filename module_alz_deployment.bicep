@@ -51,6 +51,7 @@ module policy_module 'module_alz_policies.bicep' = {
   name: 'alz_policies_deployment'
   params: {
     location: location
+    daily_backup_policy_id: recovery_module.outputs.daily_backup_policy_id
   }
 }
 

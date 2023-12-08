@@ -93,6 +93,12 @@ resource edge_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   properties: {}
 }
 
+resource config_resource_group 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'plz-config'
+  location: location
+  properties: {}
+}
+
 module network_module 'module_network.bicep' = {
   name: 'plz_network_deployment'
   scope: resourceGroup(network_resource_group.name)
