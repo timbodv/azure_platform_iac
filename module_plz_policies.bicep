@@ -147,7 +147,11 @@ resource defender_initiative 'Microsoft.Authorization/policySetDefinitions@2020-
         // Configure Azure Defender for DNS to be enabled
         policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', '2370a3c1-4a25-4283-a91a-c9c1a145fb2f')
         policyDefinitionReferenceId: 'enable_defender_for_dns'
-        parameters: {}
+        parameters: {
+          effect: {
+            value: 'Disabled'
+          }
+        }
       }
       {
         // Configure Azure Defender for Key Vaults to be enabled
@@ -171,7 +175,11 @@ resource defender_initiative 'Microsoft.Authorization/policySetDefinitions@2020-
         // Configure Microsoft Defender for Storage to be enabled
         policyDefinitionId: tenantResourceId('Microsoft.Authorization/policyDefinitions', 'cfdc5972-75b3-4418-8ae1-7f5c36839390')
         policyDefinitionReferenceId: 'enable_defender_for_storage'
-        parameters: {}
+        parameters: {
+          effect: {
+            value: 'Disabled'
+          }
+        }
       }
       {
         // Configure Microsoft Defender for APIs should be enabled
@@ -334,3 +342,18 @@ module plz_custom_roles_module 'module_plz_policies_exemptions.bicep' = {
     assignment_id:cloud_security_benchmark_initiative_assignment.id
   }
 }
+
+module exemption_one 'module_plz_policies_exemption.bicep' = {
+  name: 'enc_at_host_check_for_identity'
+  scope: resourceGroup('8e9d95eb-7ef8-4c08-a817-b44fa8655224', 'iaas-identity')
+  params: {
+    assignment_id:cloud_security_benchmark_initiative_assignment.id
+    exemption_definitions: [
+      'diskEncryptionMonitoring'
+    ]
+    exemption_display_name: 'VM confirmed to have encryption-at-host enabled'
+    exemption_description: 'Resources confirmed to be using encryption-at-host'
+    exemption_name: 'vm_confirmed_enc_at_host_enabled'
+  }
+}
+

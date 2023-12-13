@@ -21,6 +21,7 @@ resource daily_backup_policy 'Microsoft.RecoveryServices/vaults/backupPolicies@2
   properties: {
     policyType: 'V2'
     backupManagementType: 'AzureIaasVM'
+    instantRpRetentionRangeInDays: 2
     schedulePolicy: {
       scheduleRunFrequency: 'Daily'
       dailySchedule: {
