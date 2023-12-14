@@ -32,6 +32,16 @@ var alz_subscriptions = [
     subnet_collection: []
   }
 ]
+var alz_routes = [
+  {
+    name: 'all-traffic-to-hub'
+    properties: {
+      addressPrefix: '0.0.0.0/0'
+      nextHopIpAddress: '10.1.0.4'
+      nextHopType: 'VirtualAppliance'
+    }
+  }
+]
 
 var plz_prefix = 'plz'
 var plz_subscription = {
@@ -43,7 +53,7 @@ var plz_subscription = {
   subnet_collection: [
     {
       name: 'edge'
-      subnetCidr: '10.1.0.0/24'
+      subnet_cidr: '10.1.0.0/24'
       //nat_gateway_id: { id: plz_nat_module.outputs.nat_gateway_resource_id }
       security_rules: [
         {
@@ -160,7 +170,7 @@ module plz_nat_module 'module_nat.bicep' = {
 }
 
 module plz_route_table_module 'module_route_table.bicep' = {
-  name: replace('${plz_subscription.name} PLZ edge route table deployment', ' ', '_')
+  name: replace('${plz_subscription.name} PLZ hub route table deployment', ' ', '_')
   scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.network_resource_group_name)
   params: {
     location: location
@@ -181,14 +191,48 @@ module plz_network_module 'module_network.bicep' = {
     short_code: plz_subscription.short_code
     //peeringCollection: peeringCollection
     route_table_id: plz_route_table_module.outputs.route_table_id
-    nat_gateway_id: { id: plz_nat_module.outputs.nat_gateway_resource_id }
+    // for this to work, we supply the bicep that will be appended to the properties for the subnet
+    nat_gateway_id: { natGateway: { id: plz_nat_module.outputs.nat_gateway_resource_id } }
     //is_spoke_network: false
     // use the network flow details from the Shared Services ALZ
-    network_flow_storage_account_id:alz_network_watcher_module[0].outputs.network_flow_storage_account_id
+    network_flow_storage_account_id: alz_network_watcher_module[0].outputs.network_flow_storage_account_id
     network_watcher_name: alz_network_watcher_module[0].outputs.network_watcher_name
     network_watcher_resource_group_name: alz_network_watcher_module[0].outputs.network_watcher_resource_group_name
   }
 }
+
+// ALZ NETWORKS
+
+module alz_route_table_module 'module_route_table.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} ALZ spoke route table deployment', ' ', '_')
+  scope: resourceGroup(alz_subscription.subscription_id, alz_subscription.network_resource_group_name)
+  params: {
+    location: location
+    routes: alz_routes
+    prefix: alz_prefix
+    short_code: 'spoke'
+  }
+}]
+
+module alz_networks_module 'module_network.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} ALZ spoke network deployment', ' ', '_')
+  scope: resourceGroup(alz_subscription.subscription_id, alz_subscription.network_resource_group_name)
+  params: {
+    location: location
+    address_prefixes: alz_subscription.address_prefixes
+    subnet_collection: alz_subscription.subnet_collection
+    prefix: alz_prefix
+    short_code: alz_subscription.short_code
+    //peeringCollection: peeringCollection
+    route_table_id: alz_route_table_module[index].outputs.route_table_id
+    nat_gateway_id: {}
+    //is_spoke_network: false
+    network_flow_storage_account_id: alz_network_watcher_module[index].outputs.network_flow_storage_account_id
+    network_watcher_name: alz_network_watcher_module[index].outputs.network_watcher_name
+    network_watcher_resource_group_name: alz_network_watcher_module[index].outputs.network_watcher_resource_group_name
+  }
+}
+]
 
 // module plz_deployment_module 'module_plz_deployment.bicep' = {
 //   name: 'plz-deployment'

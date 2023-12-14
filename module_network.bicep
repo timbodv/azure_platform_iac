@@ -12,14 +12,6 @@ param network_watcher_resource_group_name string
 param network_flow_storage_account_id string
 
 var vnet_name = '${prefix}-${short_code}-vnet'
-//var watcher_name = '${prefix}-${shortCode}-watcher'
-
-//param storageAccountType string = 'Standard_LRS'
-
-//var storageAccountName = 'flowlogs${uniqueString(resourceGroup().id)}'
-
-//@description('Optional. Add additional site config properties to function app.')
-//param nat_gateway_id object = {}
 
 resource virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   name: vnet_name
@@ -36,10 +28,10 @@ resource virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
     //   ]
     // }
     subnets: [for (subnet, index) in subnet_collection: {
-      // this supports defining a manual subnet name, or an automatically generated one
       name: subnet.name
-      properties: {
-        addressPrefix: subnet.subnetCidr
+      // using the union function, we add a nat_gateway_id setting _if_ there is one present
+      properties: union(nat_gateway_id, {
+        addressPrefix: subnet.subnet_cidr
         routeTable: {
           id: route_table_id
         }
@@ -48,12 +40,15 @@ resource virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
         }
         privateEndpointNetworkPolicies: 'Enabled'
         privateLinkServiceNetworkPolicies: 'Enabled'
-        natGateway: nat_gateway_id
+      })
+        
+        //natGateway: nat_gateway_id
+        //natGateway: ((!empty(nat_gateway_id)) ? reference(nat_gateway_id, '2022-10-01').customerId : null)
+        
+
         //   //id: !empty(subnet.natGatewayId) ? subnet.natGatewayId : ''
         //   !empty(subnet.natGatewayId) ? id: subnet.natGatewayId : ''
         // }
-
-      }
     }]
   }
 }
