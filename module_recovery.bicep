@@ -1,6 +1,7 @@
 param location string = 'australiaeast'
+param prefix string
 
-var recovery_vault_name = 'alz-${uniqueString(subscription().id)}-rv'
+var recovery_vault_name = '${prefix}-${uniqueString(subscription().id)}-rv'
 
 resource recovery_vault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
   name: recovery_vault_name
@@ -14,8 +15,8 @@ resource recovery_vault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
   }
 }
 
-resource daily_backup_policy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {
-  name: 'default-backup-policy'
+resource default_vm_backup_policy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {
+  name: 'default-vm-backup-policy'
   location: location
   parent: recovery_vault
   properties: {
@@ -47,4 +48,4 @@ resource daily_backup_policy 'Microsoft.RecoveryServices/vaults/backupPolicies@2
   }
 }
 
-output daily_backup_policy_id string = daily_backup_policy.id
+output default_vm_backup_policy_id string = default_vm_backup_policy.id

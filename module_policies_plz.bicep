@@ -335,15 +335,7 @@ resource cloud_security_benchmark_initiative_assignment 'Microsoft.Authorization
   }
 }
 
-module plz_custom_roles_module 'module_plz_policies_exemptions.bicep' = {
-  name: 'test_exemption'
-  scope: resourceGroup('8e9d95eb-7ef8-4c08-a817-b44fa8655224', 'plz-edge')
-  params: {
-    assignment_id:cloud_security_benchmark_initiative_assignment.id
-  }
-}
-
-module exemption_one 'module_plz_policies_exemption.bicep' = {
+module exemption_one 'module_policies_plz_exemption.bicep' = {
   name: 'enc_at_host_check_for_identity'
   scope: resourceGroup('8e9d95eb-7ef8-4c08-a817-b44fa8655224', 'iaas-identity')
   params: {
@@ -354,6 +346,20 @@ module exemption_one 'module_plz_policies_exemption.bicep' = {
     exemption_display_name: 'VM confirmed to have encryption-at-host enabled'
     exemption_description: 'Resources confirmed to be using encryption-at-host'
     exemption_name: 'vm_confirmed_enc_at_host_enabled'
+  }
+}
+
+module exemption_two 'module_policies_plz_exemption.bicep' = {
+  name: 'exempt_vna_from_ip_forward_check'
+  scope: resourceGroup('8e9d95eb-7ef8-4c08-a817-b44fa8655224', 'plz-edge')
+  params: {
+    assignment_id:cloud_security_benchmark_initiative_assignment.id
+    exemption_definitions: [
+      'disableIPForwardingMonitoring'
+    ]
+    exemption_display_name: 'Exemption for IP forwarding on edge-02'
+    exemption_description: 'Enabled to support connectivity to private cloud'
+    exemption_name: 'exempt_vna_from_ip_forward_check'
   }
 }
 

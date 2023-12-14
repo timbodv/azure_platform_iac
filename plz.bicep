@@ -5,6 +5,14 @@ param location string = 'australiaeast'
 // deploy ALZ network watchers
 // deploy PLZ network, in shared services
 // deploy ALZ networks
+// peer networks
+// create PLZ shared resources
+//  custom roles
+//  maintenance configurations
+// create ALZ shared resources
+//  recovery vaults
+// deploy PLZ policies
+// deploy ALZ policies
 
 var alz_prefix = 'alz'
 var alz_subscriptions = [
@@ -12,6 +20,8 @@ var alz_subscriptions = [
     name: 'Shared Services'
     short_code: 'shd'
     network_resource_group_name: 'alz-network'
+    recovery_resource_group_name: 'alz-recovery'
+    shared_resource_group_name: 'alz-shared-resources'
     subscription_id: '8e9d95eb-7ef8-4c08-a817-b44fa8655224'
     address_prefixes: '10.1.4.0/22'
     subnet_collection: [
@@ -27,6 +37,8 @@ var alz_subscriptions = [
     name: 'Development'
     short_code: 'dev'
     network_resource_group_name: 'alz-network'
+    recovery_resource_group_name: 'alz-recovery'
+    shared_resource_group_name: 'alz-shared-resources'
     subscription_id: '967d672b-7700-45c3-81cc-bfca8da60a25'
     address_prefixes: '10.1.8.0/22'
     subnet_collection: []
@@ -48,6 +60,7 @@ var plz_subscription = {
   name: 'Shared Services - Hub'
   short_code: 'hub'
   network_resource_group_name: 'plz-network'
+  recovery_resource_group_name: 'plz-recovery'
   shared_resource_group_name: 'plz-shared-resources'
   subscription_id: '8e9d95eb-7ef8-4c08-a817-b44fa8655224'
   address_prefixes: '10.1.0.0/22'
@@ -58,7 +71,7 @@ var plz_subscription = {
       //nat_gateway_id: { id: plz_nat_module.outputs.nat_gateway_resource_id }
       security_rules: [
         {
-          name: 'Wireguard'
+          name: 'allow-inbound-wireguard'
           properties: {
             access: 'Allow'
             //description: 'string'
@@ -84,7 +97,7 @@ var plz_subscription = {
           }
         }
         {
-          name: 'SSH'
+          name: 'allow-inbound-ssh-from-internal'
           properties: {
             access: 'Allow'
             //description: 'string'
@@ -100,6 +113,33 @@ var plz_subscription = {
             priority: 120
             protocol: 'Tcp'
             //sourceAddressPrefix: 'Internet'
+            sourceAddressPrefix: 'VirtualNetwork'
+            // sourceAddressPrefixes: [
+            //   'string'
+            // ]
+            sourcePortRange: '*'
+            // sourcePortRanges: [
+            //   'string'
+            // ]
+          }
+        }
+        {
+          name: 'allow-inbound-internet-traffic-from-internal'
+          properties: {
+            access: 'Allow'
+            description: 'Inbound HTTP and HTTPS will be forwarded via the edge and NATd out to the Internet'
+            destinationAddressPrefix: 'Internet'
+            // destinationAddressPrefixes: [
+            //   'string'
+            // ]
+            // destinationPortRange: '51820'
+            destinationPortRanges: [
+              '80'
+              '443'
+            ]
+            direction: 'Inbound'
+            priority: 130
+            protocol: 'Tcp'
             sourceAddressPrefix: 'VirtualNetwork'
             // sourceAddressPrefixes: [
             //   'string'
@@ -265,7 +305,7 @@ module plz_shared_resource_group 'module_resource_group.bicep' = {
   }
 }
 
-module plz_maintenance_configuration 'module_maintenance_configuration.bicep' = {
+module plz_default_maintenance_configuration 'module_maintenance_configuration.bicep' = {
   name: replace('${plz_subscription.name} PLZ maintenance configuration deployment', ' ', '_')
   scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.shared_resource_group_name)
   params: {
@@ -273,26 +313,60 @@ module plz_maintenance_configuration 'module_maintenance_configuration.bicep' = 
   }
 }
 
-// module plz_deployment_module 'module_plz_deployment.bicep' = {
-//   name: 'plz-deployment'
-//   // Shared Services
-//   scope: subscription('8e9d95eb-7ef8-4c08-a817-b44fa8655224')
-//   params: {
-//     location: location
-//   }
-// }
+// https://learn.microsoft.com/en-us/azure/azure-monitor/logs/manage-access?tabs=portal#set-table-level-read-access
+module custom_role 'module_custom_role.bicep' = {
+  name: replace('${plz_subscription.name} PLZ maintenance configuration deployment', ' ', '_')
+  params: {
+    role_name: 'Log Analytics Table Reader'
+    role_description: 'Grants users read access to specific table data in a Log Analytics workspace'
+    actions: [
+      'Microsoft.OperationalInsights/workspaces/read'
+      'Microsoft.OperationalInsights/workspaces/query/read'
+      'Microsoft.OperationalInsights/workspaces/analytics/query/action'
+      'Microsoft.OperationalInsights/workspaces/search/action'
+    ]
+    data_actions: []
+    not_actions: [
+      'Microsoft.OperationalInsights/workspaces/sharedKeys/read'
+    ]
+    not_data_actions: []
+  }
+}
 
-// module plz_policies_module 'module_plz_policies.bicep' = {
-//   name: 'plz-policies'
-//   params: {
-//     location: location
-//     default_maintenance_configuration_id: plz_deployment_module.outputs.default_maintenance_configuration_id
-//   }
-// }
+// create ALZ shared resources
+module alz_recovery_resource_groups 'module_resource_group.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} ALZ recovery resource group deployment', ' ', '_')
+  scope: subscription(alz_subscription.subscription_id)
+  params: {
+    location: location
+    resource_group_name: alz_subscription.recovery_resource_group_name
+  }
+}]
 
-// module plz_custom_roles_module 'module_plz_custom_roles.bicep' = {
-//   name: 'plz-custom-roles'
-//   params: {
+module alz_recovery_resources 'module_recovery.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} ALZ recovery resources deployment', ' ', '_')
+  scope: resourceGroup(alz_subscription.subscription_id, alz_subscription.recovery_resource_group_name)
+  params: {
+    location: location
+    prefix: alz_prefix
+  }
+}]
 
-//   }
-// }
+// deploy PLZ policies
+module plz_policies 'module_policies_plz.bicep' = {
+  name: replace('${plz_subscription.name} PLZ policies deployment', ' ', '_')
+  params: {
+    location: location
+    default_maintenance_configuration_id: plz_default_maintenance_configuration.outputs.maintenance_configuration_id
+  }
+}
+
+// deploy ALZ policies
+module alz_policies 'module_policies_alz.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} ALZ policies deployment', ' ', '_')
+  scope: subscription(alz_subscription.subscription_id)
+  params: {
+    location: location
+    default_vm_backup_policy_id: alz_recovery_resources[index].outputs.default_vm_backup_policy_id
+  }
+}]

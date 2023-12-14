@@ -1,7 +1,7 @@
 targetScope = 'subscription'
 param location string = 'australiaeast'
 
-param daily_backup_policy_id string
+param default_vm_backup_policy_id string
 
 var owner_role_definition_id = '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
 
@@ -48,7 +48,7 @@ resource alz_initiative 'Microsoft.Authorization/policySetDefinitions@2020-09-01
         policyDefinitionReferenceId: 'configure_backup_when_not_tagged'
         parameters: {
           backupPolicyId: {
-            value: daily_backup_policy_id
+            value: default_vm_backup_policy_id
           }
           vaultLocation: {
             value: location
