@@ -48,6 +48,7 @@ var plz_subscription = {
   name: 'Shared Services - Hub'
   short_code: 'hub'
   network_resource_group_name: 'plz-network'
+  shared_resource_group_name: 'plz-shared-resources'
   subscription_id: '8e9d95eb-7ef8-4c08-a817-b44fa8655224'
   address_prefixes: '10.1.0.0/22'
   subnet_collection: [
@@ -161,11 +162,13 @@ module plz_network_resource_groups 'module_resource_group.bicep' = {
   }
 }
 
-module plz_nat_module 'module_nat.bicep' = {
+module plz_nat_module 'module_network_nat.bicep' = {
   name: replace('${plz_subscription.name} PLZ NAT gateway deployment', ' ', '_')
   scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.network_resource_group_name)
   params: {
     location: location
+    prefix: plz_prefix
+    short_code: plz_subscription.short_code
   }
 }
 
@@ -189,11 +192,9 @@ module plz_network_module 'module_network.bicep' = {
     subnet_collection: plz_subscription.subnet_collection
     prefix: plz_prefix
     short_code: plz_subscription.short_code
-    //peeringCollection: peeringCollection
     route_table_id: plz_route_table_module.outputs.route_table_id
     // for this to work, we supply the bicep that will be appended to the properties for the subnet
     nat_gateway_id: { natGateway: { id: plz_nat_module.outputs.nat_gateway_resource_id } }
-    //is_spoke_network: false
     // use the network flow details from the Shared Services ALZ
     network_flow_storage_account_id: alz_network_watcher_module[0].outputs.network_flow_storage_account_id
     network_watcher_name: alz_network_watcher_module[0].outputs.network_watcher_name
@@ -202,7 +203,6 @@ module plz_network_module 'module_network.bicep' = {
 }
 
 // ALZ NETWORKS
-
 module alz_route_table_module 'module_route_table.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
   name: replace('${alz_subscription.name} ALZ spoke route table deployment', ' ', '_')
   scope: resourceGroup(alz_subscription.subscription_id, alz_subscription.network_resource_group_name)
@@ -223,16 +223,55 @@ module alz_networks_module 'module_network.bicep' = [for (alz_subscription, inde
     subnet_collection: alz_subscription.subnet_collection
     prefix: alz_prefix
     short_code: alz_subscription.short_code
-    //peeringCollection: peeringCollection
     route_table_id: alz_route_table_module[index].outputs.route_table_id
     nat_gateway_id: {}
-    //is_spoke_network: false
     network_flow_storage_account_id: alz_network_watcher_module[index].outputs.network_flow_storage_account_id
     network_watcher_name: alz_network_watcher_module[index].outputs.network_watcher_name
     network_watcher_resource_group_name: alz_network_watcher_module[index].outputs.network_watcher_resource_group_name
   }
 }
 ]
+
+// NETWORK PEERINGS
+module alz_peering_module 'module_network_peering.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} ALZ peering deployment', ' ', '_')
+  scope: resourceGroup(alz_subscription.subscription_id, alz_subscription.network_resource_group_name)
+  params: {
+    is_spoke_network: true
+    vnet_name: alz_networks_module[index].outputs.virtual_network_name
+    remote_vnet_id: plz_network_module.outputs.virtual_network_id
+    remote_vnet_name: plz_network_module.outputs.virtual_network_name
+  }
+}]
+
+module plz_peering_module 'module_network_peering.bicep' = [for (alz_subscription, index) in alz_subscriptions: {
+  name: replace('${alz_subscription.name} PLZ peering deployment', ' ', '_')
+  scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.network_resource_group_name)
+  params: {
+    is_spoke_network: false
+    vnet_name: plz_network_module.outputs.virtual_network_name
+    remote_vnet_id: alz_networks_module[index].outputs.virtual_network_id
+    remote_vnet_name: alz_networks_module[index].outputs.virtual_network_name
+  }
+}]
+
+// PLZ SHARED RESOURCES
+module plz_shared_resource_group 'module_resource_group.bicep' = {
+  name: replace('${plz_subscription.name} PLZ shared resource group deployment', ' ', '_')
+  scope: subscription(plz_subscription.subscription_id)
+  params: {
+    location: location
+    resource_group_name: plz_subscription.shared_resource_group_name
+  }
+}
+
+module plz_maintenance_configuration 'module_maintenance_configuration.bicep' = {
+  name: replace('${plz_subscription.name} PLZ maintenance configuration deployment', ' ', '_')
+  scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.shared_resource_group_name)
+  params: {
+    location: location
+  }
+}
 
 // module plz_deployment_module 'module_plz_deployment.bicep' = {
 //   name: 'plz-deployment'

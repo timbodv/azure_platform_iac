@@ -41,14 +41,6 @@ resource virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
         privateEndpointNetworkPolicies: 'Enabled'
         privateLinkServiceNetworkPolicies: 'Enabled'
       })
-        
-        //natGateway: nat_gateway_id
-        //natGateway: ((!empty(nat_gateway_id)) ? reference(nat_gateway_id, '2022-10-01').customerId : null)
-        
-
-        //   //id: !empty(subnet.natGatewayId) ? subnet.natGatewayId : ''
-        //   !empty(subnet.natGatewayId) ? id: subnet.natGatewayId : ''
-        // }
     }]
   }
 }
@@ -60,34 +52,6 @@ resource network_security_groups 'Microsoft.Network/networkSecurityGroups@2021-0
     securityRules: subnet.security_rules
   }
 }]
-
-// resource peer_virtual_network 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2021-08-01' = [for (peer, index) in peeringCollection: {
-//   name: '${vnet_name}-to-${peer.vnet_name}'
-//   parent: virtual_network
-//   properties: {
-//     allowForwardedTraffic: is_spoke_network
-//     allowVirtualNetworkAccess: true
-//     remoteVirtualNetwork: {
-//       id: peer.id
-//     }
-//   }
-// }]
-
-// resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
-//   name: storageAccountName
-//   location: location
-//   sku: {
-//     name: storageAccountType
-//   }
-//   kind: 'StorageV2'
-//   properties: {}
-// }
-
-// resource networkWatcher 'Microsoft.Network/networkWatchers@2022-01-01' = {
-//   name: watcher_name
-//   location: location
-//   properties: {}
-// }
 
 module flow_log_module 'module_network_flow_log.bicep' = [for (subnet, index) in subnet_collection: {
   name: '${subnet.name}-flow'
@@ -103,3 +67,5 @@ module flow_log_module 'module_network_flow_log.bicep' = [for (subnet, index) in
 ]
 
 output subnets array = virtual_network.properties.subnets
+output virtual_network_id string = virtual_network.id
+output virtual_network_name string = virtual_network.name

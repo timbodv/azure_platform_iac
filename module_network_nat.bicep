@@ -1,12 +1,14 @@
-param location string = 'australiaeast'
-//param subnet_resource_id string
+param location string
+param prefix string
+param short_code string
+
+var public_ip_address_name = '${prefix}-${short_code}-pip-01'
+var nat_gateway_name = '${prefix}-${short_code}-nat'
 
 module public_ip_address 'br/public:avm-res-network-publicipaddress:0.1.0' = {
-  name: '${uniqueString(deployment().name, location)}-edge-pip-01'
+  name: '${uniqueString(deployment().name, location)}-${public_ip_address_name}'
   params: {
-    // Required parameters
-    name: 'edge-pip-01'
-    // Non-required parameters
+    name: public_ip_address_name
     ddosSettings: null
     diagnosticSettings: null
     dnsSettings: null
@@ -20,13 +22,12 @@ module public_ip_address 'br/public:avm-res-network-publicipaddress:0.1.0' = {
 }
 
 resource nat_gateway 'Microsoft.Network/natGateways@2023-04-01' = {
-  name: 'edge-nat-01'
+  name: nat_gateway_name
   location: location
   sku: {
     name: 'Standard'
   }
   properties: {
-    //idleTimeoutInMinutes: int
     publicIpAddresses: [
       {
         id: public_ip_address.outputs.resourceId
@@ -34,10 +35,5 @@ resource nat_gateway 'Microsoft.Network/natGateways@2023-04-01' = {
     ]
   }
 }
-
-//var ssh_public_key = loadTextContent('./id_rsa.pub')
-//var cloud_init_data = loadTextContent('./cloud-init-ubuntu_1.yml')
-
-
 
 output nat_gateway_resource_id string = nat_gateway.id
