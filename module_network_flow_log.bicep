@@ -16,7 +16,7 @@ resource flow_log 'Microsoft.Network/networkWatchers/flowLogs@2022-01-01' = {
   properties: {
     targetResourceId: network_security_group_id
     storageId: network_flow_storage_account_id
-    enabled: true
+    enabled: false
     retentionPolicy: {
       days: 1
       enabled: true
