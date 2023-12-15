@@ -1,0 +1,95 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Deallocate_virtual_machine": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azurevm_1']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/subscriptions/@{encodeURIComponent('8e9d95eb-7ef8-4c08-a817-b44fa8655224')}/resourcegroups/@{encodeURIComponent('iaas-core-edge')}/providers/Microsoft.Compute/virtualMachines/@{encodeURIComponent('edge-01-vm')}/deallocate",
+                    "queries": {
+                        "api-version": "2019-12-01"
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "Deallocate_virtual_machine_2": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azurevm_1']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/subscriptions/@{encodeURIComponent('8e9d95eb-7ef8-4c08-a817-b44fa8655224')}/resourcegroups/@{encodeURIComponent('iaas-core-logging')}/providers/Microsoft.Compute/virtualMachines/@{encodeURIComponent('log-01-vm')}/deallocate",
+                    "queries": {
+                        "api-version": "2019-12-01"
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "evaluatedRecurrence": {
+                    "frequency": "Day",
+                    "interval": 1,
+                    "schedule": {
+                        "hours": [
+                            "22"
+                        ],
+                        "minutes": [
+                            6
+                        ]
+                    },
+                    "timeZone": "E. Australia Standard Time"
+                },
+                "recurrence": {
+                    "frequency": "Day",
+                    "interval": 1,
+                    "schedule": {
+                        "hours": [
+                            "22"
+                        ],
+                        "minutes": [
+                            6
+                        ]
+                    },
+                    "timeZone": "E. Australia Standard Time"
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azurevm_1": {
+                    "connectionId": "/subscriptions/967d672b-7700-45c3-81cc-bfca8da60a25/resourceGroups/exp-logic-apps/providers/Microsoft.Web/connections/azurevm-1",
+                    "connectionName": "azurevm-1",
+                    "connectionProperties": {
+                        "authentication": {
+                            "identity": "/subscriptions/967d672b-7700-45c3-81cc-bfca8da60a25/resourceGroups/exp-logic-apps/providers/Microsoft.ManagedIdentity/userAssignedIdentities/exp-logic-apps-mi",
+                            "type": "ManagedServiceIdentity"
+                        }
+                    },
+                    "id": "/subscriptions/967d672b-7700-45c3-81cc-bfca8da60a25/providers/Microsoft.Web/locations/australiaeast/managedApis/azurevm"
+                }
+            }
+        }
+    }
+}
