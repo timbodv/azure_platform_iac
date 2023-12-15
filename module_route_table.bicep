@@ -4,7 +4,7 @@ param prefix string
 param short_code string
 
 resource route_table 'Microsoft.Network/routeTables@2023-04-01' = {
-  name: '${prefix}-${short_code}-rtbl'
+  name: '${prefix}-${short_code}-rt'
   location: location
   properties: {
     routes: routes

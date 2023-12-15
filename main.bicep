@@ -62,8 +62,12 @@ var plz_subscription = {
   network_resource_group_name: 'plz-network'
   recovery_resource_group_name: 'plz-recovery'
   shared_resource_group_name: 'plz-shared-resources'
+  security_resource_group_name: 'plz-secops-resources'
   subscription_id: '8e9d95eb-7ef8-4c08-a817-b44fa8655224'
   address_prefixes: '10.1.0.0/22'
+  dns_servers: [
+    '10.1.4.4'
+  ]
   subnet_collection: [
     {
       name: 'edge'
@@ -233,6 +237,7 @@ module plz_network_module 'module_network.bicep' = {
     prefix: plz_prefix
     short_code: plz_subscription.short_code
     route_table_id: plz_route_table_module.outputs.route_table_id
+    dns_servers: plz_subscription.dns_servers
     // for this to work, we supply the bicep that will be appended to the properties for the subnet
     nat_gateway_id: { natGateway: { id: plz_nat_module.outputs.nat_gateway_resource_id } }
     // use the network flow details from the Shared Services ALZ
@@ -265,6 +270,7 @@ module alz_networks_module 'module_network.bicep' = [for (alz_subscription, inde
     short_code: alz_subscription.short_code
     route_table_id: alz_route_table_module[index].outputs.route_table_id
     nat_gateway_id: {}
+    dns_servers: plz_subscription.dns_servers
     network_flow_storage_account_id: alz_network_watcher_module[index].outputs.network_flow_storage_account_id
     network_watcher_name: alz_network_watcher_module[index].outputs.network_watcher_name
     network_watcher_resource_group_name: alz_network_watcher_module[index].outputs.network_watcher_resource_group_name
@@ -305,11 +311,44 @@ module plz_shared_resource_group 'module_resource_group.bicep' = {
   }
 }
 
+module plz_security_resource_group 'module_resource_group.bicep' = {
+  name: replace('${plz_subscription.name} PLZ security resource group deployment', ' ', '_')
+  scope: subscription(plz_subscription.subscription_id)
+  params: {
+    location: location
+    resource_group_name: plz_subscription.security_resource_group_name
+  }
+}
+
 module plz_default_maintenance_configuration 'module_maintenance_configuration.bicep' = {
   name: replace('${plz_subscription.name} PLZ maintenance configuration deployment', ' ', '_')
   scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.shared_resource_group_name)
   params: {
     location: location
+  }
+}
+
+module plz_operations_log_analytics 'module_log_analytics.bicep' = {
+  name: replace('${plz_subscription.name} PLZ operations log analytics deployment', ' ', '_')
+  scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.shared_resource_group_name)
+  params: {
+    location: location
+    retentionInDays: 30
+    short_code: 'ops'
+    include_sentinel: false
+    prefix: plz_prefix
+  }
+}
+
+module plz_secops_log_analytics 'module_log_analytics.bicep' = {
+  name: replace('${plz_subscription.name} PLZ secops log analytics deployment', ' ', '_')
+  scope: resourceGroup(plz_subscription.subscription_id, plz_subscription.security_resource_group_name)
+  params: {
+    location: location
+    retentionInDays: 90
+    short_code: 'secops'
+    include_sentinel: true
+    prefix: plz_prefix
   }
 }
 

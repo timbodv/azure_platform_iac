@@ -5,4 +5,4 @@ Development     967d672b-7700-45c3-81cc-bfca8da60a25
 Shared Services 8e9d95eb-7ef8-4c08-a817-b44fa8655224
 #>
 
-New-AzSubscriptionDeployment -Location australiaeast -TemplateFile .\domain_controller.bicep
+New-AzSubscriptionDeployment -Location australiaeast -TemplateFile .\main.bicep

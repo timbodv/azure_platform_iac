@@ -93,6 +93,38 @@ resource windows_virtual_machine 'Microsoft.Compute/virtualMachines@2023-03-01' 
         name: '${vm_name}-vm-osdisk'
         osType: 'Windows'
       }
+      dataDisks: [
+        {
+          // caching: 'string'
+          createOption: 'Empty'
+          // deleteOption: 'string'
+          // detachOption: 'ForceDetach'
+          diskSizeGB: 10
+          // image: {
+          //   uri: 'string'
+          // }
+          lun: 0
+          managedDisk: {
+            // diskEncryptionSet: {
+            //   id: 'string'
+            // }
+            // id: 'string'
+            // securityProfile: {
+            //   diskEncryptionSet: {
+            //     id: 'string'
+            //   }
+            //   securityEncryptionType: 'string'
+            // }
+            storageAccountType: 'StandardSSD_LRS'
+          }
+          name: '${vm_name}-vm-datadisk-01'
+          // toBeDetached: bool
+          // vhd: {
+          //   uri: 'string'
+          // }
+          // writeAcceleratorEnabled: bool
+        }
+      ]
     }
   }
 }

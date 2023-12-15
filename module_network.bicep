@@ -10,6 +10,7 @@ param nat_gateway_id object
 param network_watcher_name string
 param network_watcher_resource_group_name string
 param network_flow_storage_account_id string
+param dns_servers array
 
 var vnet_name = '${prefix}-${short_code}-vnet'
 
@@ -22,11 +23,9 @@ resource virtual_network 'Microsoft.Network/virtualNetworks@2019-11-01' = {
         address_prefixes
       ]
     }
-    // dhcpOptions: {
-    //   dnsServers: [
-    //     '10.1.1.4'
-    //   ]
-    // }
+    dhcpOptions: {
+      dnsServers: dns_servers
+    }
     subnets: [for (subnet, index) in subnet_collection: {
       name: subnet.name
       // using the union function, we add a nat_gateway_id setting _if_ there is one present

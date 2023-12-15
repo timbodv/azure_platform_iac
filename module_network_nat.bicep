@@ -3,7 +3,7 @@ param prefix string
 param short_code string
 
 var public_ip_address_name = '${prefix}-${short_code}-pip-01'
-var nat_gateway_name = '${prefix}-${short_code}-nat'
+var nat_gateway_name = '${prefix}-${short_code}-ng'
 
 module public_ip_address 'br/public:avm-res-network-publicipaddress:0.1.0' = {
   name: '${uniqueString(deployment().name, location)}-${public_ip_address_name}'

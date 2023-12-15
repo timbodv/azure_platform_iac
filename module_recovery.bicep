@@ -16,7 +16,7 @@ resource recovery_vault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
 }
 
 resource default_vm_backup_policy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {
-  name: 'default-vm-backup-policy'
+  name: 'default-vm-backup-bkpol'
   location: location
   parent: recovery_vault
   properties: {

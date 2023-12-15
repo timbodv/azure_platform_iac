@@ -2,7 +2,7 @@ param location string
 param prefix string
 param short_code string
 
-var network_watcher_generated_name = '${prefix}-${short_code}-watcher'
+var network_watcher_generated_name = '${prefix}-${short_code}-nw'
 var storage_account_type = 'Standard_LRS'
 var storage_account_name = 'flowlogs${uniqueString(resourceGroup().id)}'
 
