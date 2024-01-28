@@ -294,3 +294,28 @@ module custom_server_list_table 'module_la_custom_tables.bicep' = {
     transform_kql: 'source\n| extend TimeGenerated = now()'
   }
 }
+
+
+var logic_apps_resource_group_name = 'ops-logic-apps'
+var logic_apps_subscription_id = '967d672b-7700-45c3-81cc-bfca8da60a25'
+var managed_identity_name = 'ops-ingest-to-log-mi'
+
+module managed_identity 'module_managed_identity.bicep' = {
+  name: '${uniqueString(deployment().name, location)}-managed_identity'
+  scope: resourceGroup(logic_apps_subscription_id, logic_apps_resource_group_name)
+  params: {
+    location: location
+    managed_identity_name: managed_identity_name
+  }
+}
+
+module start_vm_logic_app 'module_logic_app.bicep' = {
+  name: '${uniqueString(deployment().name, location)}-import_server_list'
+  scope: resourceGroup(logic_apps_subscription_id, logic_apps_resource_group_name)
+  params: {
+    location: location
+    logic_app_name: 'import-server-list-la'
+    logic_app_properties: loadJsonContent('blank_logic_app.json')
+    managed_identity_id: managed_identity.outputs.managed_identity_id
+  }
+}

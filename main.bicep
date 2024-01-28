@@ -24,6 +24,9 @@ var alz_subscriptions = [
     shared_resource_group_name: 'alz-shared-resources'
     subscription_id: '8e9d95eb-7ef8-4c08-a817-b44fa8655224'
     address_prefixes: '10.1.4.0/22'
+    dns_servers: [
+      '10.1.4.4'
+    ]
     subnet_collection: [
       {
         name: 'identity'
@@ -41,6 +44,9 @@ var alz_subscriptions = [
     shared_resource_group_name: 'alz-shared-resources'
     subscription_id: '967d672b-7700-45c3-81cc-bfca8da60a25'
     address_prefixes: '10.1.8.0/22'
+    dns_servers: [
+      '10.1.4.4'
+    ]
     subnet_collection: []
   }
 ]
@@ -145,6 +151,31 @@ var plz_subscription = {
             priority: 130
             protocol: 'Tcp'
             sourceAddressPrefix: 'VirtualNetwork'
+            // sourceAddressPrefixes: [
+            //   'string'
+            // ]
+            sourcePortRange: '*'
+            // sourcePortRanges: [
+            //   'string'
+            // ]
+          }
+        }
+        {
+          name: 'allow-dns-to-cloudflare'
+          properties: {
+            access: 'Allow'
+            destinationAddressPrefix: '1.1.1.1'
+            // destinationAddressPrefixes: [
+            //   'string'
+            // ]
+            // destinationPortRange: '51820'
+            destinationPortRanges: [
+              '53'
+            ]
+            direction: 'Inbound'
+            priority: 140
+            protocol: '*'
+            sourceAddressPrefix: '10.1.4.4'
             // sourceAddressPrefixes: [
             //   'string'
             // ]
@@ -270,7 +301,7 @@ module alz_networks_module 'module_network.bicep' = [for (alz_subscription, inde
     short_code: alz_subscription.short_code
     route_table_id: alz_route_table_module[index].outputs.route_table_id
     nat_gateway_id: {}
-    dns_servers: plz_subscription.dns_servers
+    dns_servers: alz_subscription.dns_servers
     network_flow_storage_account_id: alz_network_watcher_module[index].outputs.network_flow_storage_account_id
     network_watcher_name: alz_network_watcher_module[index].outputs.network_watcher_name
     network_watcher_resource_group_name: alz_network_watcher_module[index].outputs.network_watcher_resource_group_name
