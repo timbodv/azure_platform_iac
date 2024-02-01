@@ -291,7 +291,7 @@ module custom_server_list_table 'module_la_custom_tables.bicep' = {
     custom_table_name: 'ServerList'
     table_columns: server_list_table_columns
     stream_columns: server_list_stream_columns
-    transform_kql: 'source\n| extend TimeGenerated = now()'
+    transform_kql: 'source\n| extend TimeGenerated = now(), ComputerName = computerName, State = state, SupportTeam = supportTeam, SystemCode = systemCode\n| project-away computerName,state,supportTeam,systemCode'
   }
 }
 
@@ -309,13 +309,13 @@ module managed_identity 'module_managed_identity.bicep' = {
   }
 }
 
-module start_vm_logic_app 'module_logic_app.bicep' = {
-  name: '${uniqueString(deployment().name, location)}-import_server_list'
-  scope: resourceGroup(logic_apps_subscription_id, logic_apps_resource_group_name)
-  params: {
-    location: location
-    logic_app_name: 'import-server-list-la'
-    logic_app_properties: loadJsonContent('blank_logic_app.json')
-    managed_identity_id: managed_identity.outputs.managed_identity_id
-  }
-}
+// module start_vm_logic_app 'module_logic_app.bicep' = {
+//   name: '${uniqueString(deployment().name, location)}-import_server_list'
+//   scope: resourceGroup(logic_apps_subscription_id, logic_apps_resource_group_name)
+//   params: {
+//     location: location
+//     logic_app_name: 'import-server-list-la'
+//     logic_app_properties: loadJsonContent('blank_logic_app.json')
+//     managed_identity_id: managed_identity.outputs.managed_identity_id
+//   }
+// }
